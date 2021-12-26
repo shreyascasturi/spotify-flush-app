@@ -1,0 +1,50 @@
+#+title: Design Doc for Spotify-flush-app
+#+author: Shreyas Casturi
+
+* Problem
+1. Curious in my music taste?
+   - NEED: list -> contains all albums
+2. Change music taste?
+   - Delete library -> start again
+   - NEED: Save library -> list!
+   - NEED: list -> all prior albums
+   - NEED: Mass delete function
+3. Given text file/csv file -> (re)-populate Spotify library
+
+* Solution 
+1. Spotify-flush-app
+   - Functionality 1: /snapshot/ Spotify account
+       1. Account -> |Spotify-flush-app| -> list of saved albums (.txt/.csv file)
+   - Functionality 2: /populate/ Spotify account
+       1. list of saved albums -> |Spotify-flush-app| -> fill saved albums
+   - Functionality 3: /delete/ album list
+       1. Account -> |Spotify-flush-app| -> delete saved albums
+          
+* Implementation
+** Assumptions
+1. Use Spotify API 
+2. Use Python interface for Spotify API 
+   - Known as /spotipy/
+   
+** Task Breakdown (General to Granular)
+0. Pre-requisite: /connect/ app to Spotify via Spotipy
+   - Task breakdown:
+     - Create a test user on Spotify
+     - Register app under this user
+     - Be able to add one album
+     - Be able to remove one album
+     - Verify that basic authentication works by using real account
+1. /delete/ list of albums
+   - Task breakdown:
+     - Delete a single album via Spotipy
+     - Delete multiple albums via Spotipy
+     - Delete all albums via Spotipy 
+2. /snapshot/ Spotify account
+   - Task breakdown:
+     - Get a single album and write to csv file
+     - Get multiple albums and write to csv file
+3. /populate/ Spotify account
+   - Task breakdown:
+     - Use csv file to add a single album
+     - Use csv file to add multiple albums
+   
