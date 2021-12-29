@@ -17,6 +17,8 @@ Run app.py
     python3 app.py OR python3 -m flask run
     NOTE: If receiving "port already in use" error, try other ports: 5000, 8090, 8888, etc...
         (will need to be updated in your Spotify app and SPOTIPY_REDIRECT_URI variable)
+
+NOTES: Taken from plamere/spotipy examples folder, labeled app.py. Changes were made to add functionality.
 """
 
 import os
@@ -26,11 +28,16 @@ import spotipy
 import uuid
 
 app = Flask(__name__)
+
+# why is this needed?
+# is it to give each connecting session uniqueness?
 app.config['SECRET_KEY'] = os.urandom(64)
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SESSION_FILE_DIR'] = './.flask_session/'
 Session(app)
 
+# cache is needed to store authentication tokens
+# during a session, I think.
 caches_folder = './.spotify_caches/'
 if not os.path.exists(caches_folder):
    os.makedirs(caches_folder)
@@ -44,8 +51,12 @@ def index():
         # Step 1. Visitor is unknown, give random ID
         session['uuid'] = str(uuid.uuid4())
 
+    # basic process: create a cache handler for token
+    # create the auth_manager object (probably uses the variables that we exported/set)
+    # auth manager gives you authorization url to go to
+    # you can get the token as necessary
     cache_handler = spotipy.cache_handler.CacheFileHandler(cache_path=session_cache_path())
-    auth_manager = spotipy.oauth2.SpotifyOAuth(scope='user-read-currently-playing playlist-modify-private',
+    auth_manager = spotipy.oauth2.SpotifyOAuth(scope='user-read-currently-playing user-library-read playlist-modify-private',
                                                 cache_handler=cache_handler, 
                                                 show_dialog=True)
 
@@ -56,8 +67,8 @@ def index():
 
     if not auth_manager.validate_token(cache_handler.get_cached_token()):
         # Step 2. Display sign in link when no token
-        auth_url = auth_manager.get_authorize_url()
-        return f'<h2><a href="{auth_url}">Sign in</a></h2>'
+        auth_url = auth_manager.get_authorize_url() # how is this url given?
+        return f'<h2><center><a href="{auth_url}">Sign in</a></center></h2>'
 
     # Step 4. Signed in, display data
     #return "LOOKS LIKE THIS WORKS?"
@@ -66,29 +77,45 @@ def index():
            f'<small><a href="/sign_out">[sign out]<a/></small></h2>' \
            f'<a href="/playlists">my playlists</a> | ' \
            f'<a href="/currently_playing">currently playing</a> | ' \
-        	   f'<a href="/current_user">me</a>' \
+        	   f'<a href="/current_user">me</a> | ' \
+                   f'<a href="/snapshot">snapshot<a/>'\
 
 
-@app.route('/sign_out')
-def sign_out():
-    try:
-        # Remove the CACHE file (.cache-test) so that a new user can authorize.
-        os.remove(session_cache_path())
-        session.clear()
-    except OSError as e:
-        print ("Error: %s - %s." % (e.filename, e.strerror))
-    return redirect('/')
+# @app.route('/sign_out')
+# def sign_out():
+#     try:
+#         # Remove the CACHE file (.cache-test) so that a new user can authorize.
+#         os.remove(session_cache_path())
+#         session.clear()
+#     except OSError as e:
+#         print ("Error: %s - %s." % (e.filename, e.strerror))
+#     return redirect('/')
 
+# give snapshot functionality here
+# first, print all albums out now.
+@app.route('/snapshot')
+def snapshot():
+    cache_handler = spotipy.cache_handler.CacheFileHandler(cache_path=session_cache_path())
+    auth_manager = spotipy.oauth2.SpotifyOAuth(cache_handler=cache_handler)
+    if not auth_manager.validate_token(cache_handler.get_cached_token()):
+        return redirect('/')
 
-# @app.route('/playlists')
-# def playlists():
-#     cache_handler = spotipy.cache_handler.CacheFileHandler(cache_path=session_cache_path())
-#     auth_manager = spotipy.oauth2.SpotifyOAuth(cache_handler=cache_handler)
-#     if not auth_manager.validate_token(cache_handler.get_cached_token()):
-#         return redirect('/')
+    spotify = spotipy.Spotify(auth_manager=auth_manager)
+    saved_albums_raw = spotify.current_user_saved_albums(limit=1)
+    return f'Album: {saved_albums_raw["items"]["artists"]["name"]}' \
+        f'<a href="/">[return to home]<a/>'
+    #return spotify.current_user_saved_albums(limit=1)
+#    return f'<a href="/">[return to home]<a/>'
 
-#     spotify = spotipy.Spotify(auth_manager=auth_manager)
-#     return spotify.current_user_playlists()
+@app.route('/playlists')
+def playlists():
+    cache_handler = spotipy.cache_handler.CacheFileHandler(cache_path=session_cache_path())
+    auth_manager = spotipy.oauth2.SpotifyOAuth(cache_handler=cache_handler)
+    if not auth_manager.validate_token(cache_handler.get_cached_token()):
+        return redirect('/')
+
+    spotify = spotipy.Spotify(auth_manager=auth_manager)
+    return spotify.current_user_playlists()
 
 
 # @app.route('/currently_playing')
