@@ -30,10 +30,20 @@
 0. Pre-requisite: /connect/ app to Spotify via Spotipy
    - Task breakdown:
      - Create a test user on Spotify
+       - Status: *NOT ATTEMPTED*
      - Register app under this user
+       - Status: *DONE - Spotify app re-registered under reg name*
+         - Date of Completion: 12/26/2021
+     - Need to create webpage in Flask for authentication
+       - Status: *IN PROGRESS*
+     - Need to be able to run webpage/host webpage
+         - Status
      - Be able to add one album
+       - Status: *NOT ATTEMPTED*
      - Be able to remove one album
+       - Status: *NOT ATTEMPTED*
      - Verify that basic authentication works by using real account
+       - Status: *NOT ATTEMPTED*
 1. /delete/ list of albums
    - Task breakdown:
      - Delete a single album via Spotipy
