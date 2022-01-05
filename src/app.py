@@ -26,6 +26,7 @@ from flask import Flask, session, request, redirect
 from flask_session import Session
 import spotipy
 import uuid
+from pprint import pprint
 
 app = Flask(__name__)
 
@@ -78,7 +79,8 @@ def index():
            f'<a href="/playlists">my playlists</a> | ' \
            f'<a href="/currently_playing">currently playing</a> | ' \
         	   f'<a href="/current_user">me</a> | ' \
-                   f'<a href="/snapshot">snapshot<a/>'\
+                   f'<a href="/snapshot">snapshot<a/> | '\
+                   f'<a href="/test_multiple_authors"test_multiple_authors<a/>'
 
 
 # @app.route('/sign_out')
@@ -93,6 +95,11 @@ def index():
 
 # give snapshot functionality here
 # first, print all albums out now.
+
+@app.route('/test_multiple_authors')
+def test_mult_authors():
+   
+   
 @app.route('/snapshot')
 def snapshot():
     cache_handler = spotipy.cache_handler.CacheFileHandler(cache_path=session_cache_path())
@@ -101,8 +108,24 @@ def snapshot():
         return redirect('/')
 
     spotify = spotipy.Spotify(auth_manager=auth_manager)
-    saved_albums_raw = spotify.current_user_saved_albums(limit=1)
-    return f'Album: {saved_albums_raw["items"]["artists"]["name"]}' \
+
+    offset_test = 0
+    saved_albums_tuple_list = []
+    
+    while offset_test != 500:
+       
+       saved_albums_raw = spotify.current_user_saved_albums(limit=20, offset=offset_test)
+       for item in saved_albums_raw["items"]:
+          saved_albums_tuple_list.append((item["album"]["name"], item["album"]["artists"][0]["name"]))
+       offset_test += 20
+
+    Album: dict_keys(['href', 'items', 'limit', 'next', 'offset', 'previous', 'total'])[return to home]
+
+    for item in saved_albums_raw["items"]:
+       print("item is: " + str(item["album"]))
+
+       
+    return f'Albums: {saved_albums_tuple_list}' \
         f'<a href="/">[return to home]<a/>'
     #return spotify.current_user_saved_albums(limit=1)
 #    return f'<a href="/">[return to home]<a/>'
